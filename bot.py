@@ -41,7 +41,7 @@ def handle_message(message):
     if confidence > 0.5:
         response = answers[best_match_index]
     else:
-        response = "Извините, я не понял ваш вопрос. Вы можете его уточнить у https://t.me/Yaroslav9605"
+        response = "Извините, я не понял ваш вопрос. Вы можете его уточнить у " + os.getenv("OPERATOR")
 
     bot.send_message(message.chat.id, response)
 
