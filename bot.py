@@ -1,9 +1,12 @@
 import telebot
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # 1. Инициализация бота
-bot = telebot.TeleBot("7919779735:AAEEH3TzOs98MZ4Q78QSAcyJZ2lVGr8y7nU")
+bot = telebot.TeleBot(os.getenv("TOKEN"))
 
 # 2. Шаблонные вопросы и ответы
 faq_data = {
@@ -35,7 +38,7 @@ def handle_message(message):
     best_match_index = similarities.argmax()
     confidence = similarities[0, best_match_index]
 
-    if confidence > 0.6:
+    if confidence > 0.5:
         response = answers[best_match_index]
     else:
         response = "Извините, я не понял ваш вопрос. Вы можете его уточнить у https://t.me/Yaroslav9605"
