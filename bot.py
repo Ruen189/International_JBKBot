@@ -36,7 +36,7 @@ def handle_admin_callbacks(call):
             admin = call.from_user
             with open("log.txt", "w", encoding="utf-8") as f:
                 f.write(
-                    f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] logs was cleared by: @{admin.username} (ID: {admin.id})\n")
+                    f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Логи были очищены пользователем: @{admin.username} (ID: {admin.id})\n")
 
             bot.send_message(call.message.chat.id, "🧹 Логи успешно очищены.")
         except Exception as e:
@@ -68,7 +68,40 @@ def handle_admin_callbacks(call):
 
     elif call.data == "cancel_off":
         bot.send_message(call.message.chat.id, "❌ Отключение отменено.")
+    # Добавление нового вопроса
+    elif call.data == "add_faq":
+        msg = bot.send_message(call.message.chat.id, "Введите новый вопрос:")
+        bot.register_next_step_handler(msg, process_new_question)
 
+    # Удаление вопроса
+    elif call.data == "delete_faq":
+        msg = bot.send_message(call.message.chat.id, "Введите точный текст вопроса, который хотите удалить:")
+        bot.register_next_step_handler(msg, delete_faq)
+
+#Добавление и удаление вопросов в faq_data
+def process_new_question(message):
+    new_question = message.text
+    msg = bot.send_message(message.chat.id, "Введите ответ на этот вопрос:")
+    bot.register_next_step_handler(msg, lambda m: save_new_faq(new_question, m))
+
+def save_new_faq(question, message):
+    from ai_operator import faq_data, save_faq_data
+    answer = message.text
+    faq_data[question] = answer
+    save_faq_data(faq_data)
+    bot.send_message(message.chat.id, f"✅ Добавлен новый вопрос:\n\n{question}\nОтвет:\n{answer}")
+
+def delete_faq(message):
+    from ai_operator import faq_data, save_faq_data
+    question = message.text
+    if question in faq_data:
+        del faq_data[question]
+        save_faq_data(faq_data)
+        bot.send_message(message.chat.id, f"✅ Вопрос удалён:\n{question}")
+    else:
+        bot.send_message(message.chat.id, "❌ Такого вопроса нет в базе.")
+
+#Админ панель
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
     if str(message.from_user.id) != os.getenv("ADMIN_ID"):
@@ -79,6 +112,8 @@ def admin_panel(message):
     markup.add(InlineKeyboardButton("📥 Скачать лог", callback_data="log"))
     markup.add(InlineKeyboardButton("🧹 Очистить лог", callback_data="clear_log"))
     markup.add(InlineKeyboardButton("❌ Выключить бота", callback_data="off"))
+    markup.add(InlineKeyboardButton("➕ Добавить вопрос", callback_data="add_faq"))
+    markup.add(InlineKeyboardButton("➖ Удалить вопрос", callback_data="delete_faq"))
     bot.send_message(message.chat.id, "🛠 Админ-панель", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: True)
