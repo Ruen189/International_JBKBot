@@ -48,3 +48,5 @@ def handle_message(message):
 
 # 5. Запуск
 bot.polling()
+
+# Тестовый комментарий
