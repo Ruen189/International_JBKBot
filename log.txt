@@ -1,0 +1,49 @@
+[2025-05-26 04:47:34] Логи были очищены пользователем: @Yaroslav9605 (ID: 1264725550)
+Time: 2025-05-26 04:56:48 | User: @Rabotyaga77777 | ID: 6512642775 | Message: Абоьа | score: 0.7138671875
+Feedback | Time: 2025-05-26 05:09:15 | User: @Yaroslav9605 | ID: 1264725550 | Feedback: бля
+Rating | Time: 2025-05-26 05:12:33 | User: @Yaroslav9605 | ID: 1264725550 | Rating: 5
+Rating | Time: 2025-05-26 05:15:37 | User: @Yaroslav9605 | ID: 1264725550 | Rating: 5
+Time: 2025-05-26 05:26:52 | User: @Yaroslav9605 | ID: 1264725550 | Message: АЛЕ | score: 0.53515625
+Time: 2025-05-26 05:31:38 | User: @Yaroslav9605 | ID: 1264725550 | Message: P; | score: 0.1900634765625
+Time: 2025-05-26 05:31:56 | User: @Yaroslav9605 | ID: 1264725550 | Message: F | score: 0.318359375
+Time: 2025-05-26 05:42:55 | User: @Yaroslav9605 | ID: 1264725550 | Message: как зовут | score: 0.7470703125
+Time: 2025-05-26 05:44:01 | User: @Yaroslav9605 | ID: 1264725550 | Message: 🥸 | score: 0.3056640625
+2025-05-26 18:30:48,660 - Threaded polling exception: A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-05-26 18:30:48,661 - Exception traceback:
+Traceback (most recent call last):
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\__init__.py", line 1234, in __threaded_polling
+    polling_thread.raise_exceptions()
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\util.py", line 111, in raise_exceptions
+    raise self.exception_info
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\util.py", line 93, in run
+    task(*args, **kwargs)
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\__init__.py", line 688, in __retrieve_updates
+    updates = self.get_updates(offset=(self.last_update_id + 1),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\__init__.py", line 660, in get_updates
+    json_updates = apihelper.get_updates(
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\apihelper.py", line 332, in get_updates
+    return _make_request(token, method_url, params=payload)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\apihelper.py", line 168, in _make_request
+    json_result = _check_result(method_name, result)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\snaw\AppData\Local\Programs\Python\Python312\Lib\site-packages\telebot\apihelper.py", line 195, in _check_result
+    raise ApiTelegramException(method_name, result, result_json)
+telebot.apihelper.ApiTelegramException: A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+
+Feedback | Time: 2025-05-26 19:23:30 | User: @Yaroslav9605 | ID: 1264725550 | Feedback: как переселиться?
+Feedback | Time: 2025-05-26 19:27:36 | User: @Yaroslav9605 | ID: 1264725550 | Feedback: как переселиться?
+Feedback | Time: 2025-05-26 19:30:39 | User: @Yaroslav9605 | ID: 1264725550 | Feedback: куда я жмал
+Time: 2025-05-26 20:30:25 | User: @Yaroslav9605 | ID: 1264725550 | Message: Как жизнь? | score: 0.7900390625
+Time: 2025-05-26 20:46:22 | User: @Yaroslav9605 | ID: 1264725550 | Message: где давид | score: 0.73876953125
+Time: 2025-05-26 20:46:25 | User: @Yaroslav9605 | ID: 1264725550 | Message: Где | score: 0.580078125
+Time: 2025-05-26 20:46:27 | User: @Yaroslav9605 | ID: 1264725550 | Message: где я | score: 0.62451171875
+Time: 2025-05-26 21:19:05 | User: @Yaroslav9605 | ID: 1264725550 | Message: Z RNJ YF[EQ | score: 0.258544921875
+Time: 2025-05-26 21:19:58 | User: @Yaroslav9605 | ID: 1264725550 | Message: Я КТО | score: 0.69921875
+Time: 2025-05-26 21:19:59 | User: @Yaroslav9605 | ID: 1264725550 | Message: КТО | score: 0.74755859375
+Time: 2025-05-26 21:20:01 | User: @Yaroslav9605 | ID: 1264725550 | Message: КТО ГДЕ | score: 0.70703125
+Time: 2025-05-26 21:20:03 | User: @Yaroslav9605 | ID: 1264725550 | Message: ГДЕ | score: 0.580078125
+Time: 2025-05-26 21:20:05 | User: @Yaroslav9605 | ID: 1264725550 | Message: ГДЕ ЕПТА | score: 0.66845703125
+Time: 2025-05-26 21:20:07 | User: @Yaroslav9605 | ID: 1264725550 | Message: ГДЕ Я | score: 0.62451171875
