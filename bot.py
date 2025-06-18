@@ -8,6 +8,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import datetime
 from telebot.types import BotCommand
 import json
+from collections import defaultdict, deque
 
 ENV_FILE = 'env.json'
 def load_env():
@@ -70,7 +71,7 @@ def handle_start(message):
     markup.add(InlineKeyboardButton("🛠 Помощь", callback_data="help"))
     markup.add(InlineKeyboardButton("❓ Часто задаваемые вопросы", callback_data="faq"))
     markup.add(InlineKeyboardButton("🚀 Обратная связь", callback_data="feedback"))
-    markup.add(InlineKeyboardButton("🔥 Оценка работы бота", callback_data="rate"))
+    markup.add(InlineKeyboardButton("🔥 Оценка работы бота", callback_data="rating"))
     # Отправляем приветствие с кнопками
     bot.send_message(message.chat.id, "Здравствуйте, какой у вас вопрос?", reply_markup=markup)
 
@@ -86,12 +87,15 @@ def handle_all_callbacks(call):
         bot.send_message(call.message.chat.id,
                          "Этот бот отвечает на распространенные вопросы по поселению "
                          "или связывает с оператором, если вопрос требует такого.\n"
-                         "Не нужно описывать ваше текущее состояние или ситуацию - задавайте сразу конкретный вопрос.\n"
+                         "Не прикрепляйте файлы, картинки или гифки, иначе бот не ответит.\n"
+                         "Не нужно описывать вашу ситацию - задавайте сразу конкретный вопрос.\n"
                          "Пример:\n"
                          "❌У меня есть долг по проживанию, как оплатить долг?\n"
                          "✅Как оплатить проживание?\n"
                          "Ниже прилагаю файл со всеми вопросами и ответами")
-        send_help_list(call, bot)
+        create_help_list()
+        with open("help_list.txt", "rb") as f:
+            bot.send_document(call.message.chat.id, f)
 
     elif call.data == "faq":
         bot.send_message(call.message.chat.id,
@@ -99,8 +103,8 @@ def handle_all_callbacks(call):
         'Для заполнения заявления на переселение необходимо подойти в жилищно-бытовую комиссию во время дежурства\n'
         '"Как оплатить проживание?":\n'
         'Необходимо зайти в ЛК студента в раздел \"Платежи и задолжности\" и оплатить через сервис pay.urfu.ru\n'
-        '"Можно ли выбрать комнату?":\n'
-        'Выбор комнаты ограничен, уточните в деканате или студгородке.\n')
+        '"Сколько стоит проживание?":\n'
+        'Стоимость проживания в разных общежитиях разная и может со временем не значительно меняться, обычно от 1000 до 3000 руб./мес.\n')
 
     elif call.data == "feedback":
         # Запрос фидбэка с кнопкой «Назад»
@@ -123,7 +127,7 @@ def handle_all_callbacks(call):
         markup.add(InlineKeyboardButton("🔥 Оценка работы бота", callback_data="rating"))
         bot.send_message(call.message.chat.id, "Вы вернулись в главное меню:", reply_markup=markup)
 
-    elif call.data == "rate":
+    elif call.data == "rating":
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("⭐", callback_data="rate_1")),
         markup.add(InlineKeyboardButton("⭐⭐", callback_data="rate_2")),
@@ -196,13 +200,17 @@ def handle_admin_callbacks(call):
         bot.send_message(call.message.chat.id, "❌ Отключение отменено.")
     # Добавление нового вопроса
     elif call.data == "add_faq":
-        msg = bot.send_message(call.message.chat.id, "Введите новый вопрос:")
-        bot.register_next_step_handler(msg, process_new_question)
-
+        try:
+            msg = bot.send_message(call.message.chat.id, "Введите новый вопрос:")
+            bot.register_next_step_handler(msg, process_new_question)
+        except Exception as e:
+            bot.send_message(call.message.chat.id, f"Error off: {e}")
     # Удаление вопроса
     elif call.data == "delete_faq":
         msg = bot.send_message(call.message.chat.id, "Введите вопрос из help_list, который хотите удалить в таком формате: \"Как переселиться?\"")
-        send_help_list(call, bot)
+        create_help_list()
+        with open("help_list.txt", "rb") as f:
+            bot.send_document(call.message.chat.id, f)
         bot.register_next_step_handler(msg, delete_faq)
 
     elif call.data == "add_admin":
@@ -293,14 +301,12 @@ def create_help_list():
             item_string = str(pair[0]) + ". " + ": ".join(pair[1]) + "\n\n"
             help_out.write(item_string)
 
-def send_help_list(call, bot):
-    create_help_list()
-    with open("help_list.txt", "rb") as f:
-        bot.send_document(call.message.chat.id, f)
-
 #Добавление и удаление вопросов в faq_data
 def process_new_question(message):
     new_question = message.text
+    if not new_question:
+        bot.send_message(message.chat.id, "❌ Вопрос не может быть пустым. Не добавляйте gif/png/стикеры или любой другой не текстовый формат. Добавление отменено.")
+        return
     msg = bot.send_message(message.chat.id, "Введите ответ на этот вопрос:")
     bot.register_next_step_handler(msg, lambda m: save_new_faq(new_question, m))
 
@@ -308,6 +314,9 @@ def save_new_faq(question, message):
     from ai_operator import faq_data, save_faq_data, questions, answers, build_faiss_index
 
     answer = message.text
+    if not answer:
+        bot.send_message(message.chat.id, "❌ Ответ не может быть пустым. Не добавляйте gif/png/стикеры или любой другой не текстовый формат. Добавление отменено.")
+        return
     faq_data[question] = answer
     save_faq_data(faq_data)
 
@@ -359,10 +368,62 @@ def admin_panel(message):
     markup.add(InlineKeyboardButton("✏️ Изменить оператора", callback_data="change_operator"))
     bot.send_message(message.chat.id, "🛠 Админ-панель", reply_markup=markup)
 
+#Основной перехватчик сообщений и его вспомогательные функции
+RATE_LIMIT_COUNT = 4
+RATE_LIMIT_WINDOW = 10.0
+
+user_messages = defaultdict(lambda: deque())
+
+def is_allowed(user_id: int) -> bool:
+    now = time.time()
+    dq = user_messages[user_id]
+    # Удаляем старые отметки
+    while dq and now - dq[0] > RATE_LIMIT_WINDOW:
+        dq.popleft()
+    if len(dq) >= RATE_LIMIT_COUNT:
+        return False
+    dq.append(now)
+    return True
+
+MAX_MESSAGE_LENGTH = 400
+MIN_MESSAGE_LENGTH = 4
+
+def validate_length(text: str, chat_id: int) -> bool:
+    length = len(text)
+    if length > MAX_MESSAGE_LENGTH:
+        bot.send_message(
+            chat_id,
+            f"❗️ Сообщение слишком длинное ({length} символов).\n"
+            f"Максимум — {MAX_MESSAGE_LENGTH} символов. Пожалуйста, сократите ваш текст."
+        )
+        return False
+    if length < MIN_MESSAGE_LENGTH:
+        bot.send_message(
+            chat_id,
+            f"❗️ Сообщение слишком короткое ({length} символов).\n"
+            f"Минимум — {MIN_MESSAGE_LENGTH} символов."
+        )
+        return False
+    return True
+
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     user_input = message.text
+
+    if not validate_length(user_input, message.chat.id):
+        return
+
+    uid = message.from_user.id
+    if not is_allowed(uid):
+        bot.send_message(
+            message.chat.id,
+            "⚠️ Слишком часто отправляете сообщения — подождите пару секунд."
+        )
+        return
+
     response, score, isFound = get_answer(user_input)
+    if response is None:
+        response = "Ошибка: message text is empty"
     if isFound:
         bot.send_message(message.chat.id, response)
     else:
