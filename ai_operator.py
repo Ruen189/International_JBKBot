@@ -43,9 +43,7 @@ def build_faiss_index():
 
 build_faiss_index()
 
-import numpy as np
-
-def get_answer(query, threshold=0.75, k=10, num_answers=3):
+def get_answer(query, threshold=0.75, k=10, num_answers=3, parse_mode = None):
     """
     Ищет один или несколько ответов для query:
       - k           — число кандидатов из FAISS по L2;
@@ -65,6 +63,7 @@ def get_answer(query, threshold=0.75, k=10, num_answers=3):
 
     # 2. Берём k ближайших по L2
     distances, indices = index.search(query_embedding, k)
+    print(query_embedding)
     candidate_idxs = indices[0]
 
     # 3. Нормализуем эмбеддинги для косинуса
@@ -80,14 +79,12 @@ def get_answer(query, threshold=0.75, k=10, num_answers=3):
 
     # Самый лучший
     best_idx, best_score = candidates[0]
-
     # Если очень высокая схожесть — один ответ
     if best_score > 0.9:
-        return answers[best_idx], best_score, True
+        return answers[best_idx], best_score, True, parse_mode
 
     # Если хотя бы порог пройден — несколько вариантов
     if best_score >= threshold:
-        # Оставляем только тех, кто >= threshold
         filtered = [(idx, sim) for idx, sim in candidates if sim >= threshold]
         seen_answers = set()
         qa_list = []
@@ -100,12 +97,22 @@ def get_answer(query, threshold=0.75, k=10, num_answers=3):
             qa_list.append((q, ans))
             if len(qa_list) >= num_answers:
                 break
-        # Формируем ответ
-        response_lines = []
-        for i, (q, a) in enumerate(qa_list):
-            response_lines.append(f"{i+1}. \"{q}\"\n{a}")
-        response = "Вот возможные варианты:\n\n" + "\n\n".join(response_lines)
-        return response, best_score, True
+
+        # Формируем ответ в зависимости от числа вариантов
+        if len(qa_list) == 1:
+            q, a = qa_list[0]
+            response = (
+                f"<i>Возможно, вы имели в виду: «{q}»?</i>\n"
+                f"<b>Ответ:</b>\n{a}"
+            )
+            return response, best_score, True, 'HTML'
+        else:
+            lines = []
+            for i, (q, a) in enumerate(qa_list, start=1):
+                lines.append(f"{i}. \"{q}\"\n{a}")
+            response = "Возможно, вы имели в виду:\n\n" + "\n\n".join(lines)
+
+        return response, best_score, True, parse_mode
 
     # Иначе — отказ
     return (
@@ -113,5 +120,6 @@ def get_answer(query, threshold=0.75, k=10, num_answers=3):
         "Попробуйте написать вопрос проще (в одно предложение),\n"
         "нажмите кнопку помощи или напишите оператору: ",
         best_score,
-        False
+        False,
+        parse_mode
     )

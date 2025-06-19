@@ -49,6 +49,19 @@ logging.basicConfig(
     encoding='utf-8'
 )
 
+last_user_message = {}
+
+def is_duplicate(user_id: int, text: str) -> bool:
+    """
+    Проверяет, совпадает ли текущее сообщение (команда или текст) с последним от этого пользователя.
+    Если да — возвращает True, иначе обновляет и возвращает False.
+    """
+    last = last_user_message.get(user_id)
+    if last is not None and last == text:
+        return True
+    last_user_message[user_id] = text
+    return False
+
 # 1. Инициализация бота
 bot = telebot.TeleBot(TOKEN)
 
@@ -56,6 +69,13 @@ bot = telebot.TeleBot(TOKEN)
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     user_id = message.from_user.id
+    if is_duplicate(user_id, message.text):
+        bot.send_message(
+            message.chat.id,
+            "⚠️ Пожалуйста, не отправляйте одну и ту же команду подряд."
+        )
+        return
+
     # Отдельный список команд для админа
     if str(user_id) in ADMIN_IDS:
         bot.set_my_commands([
@@ -352,7 +372,14 @@ def delete_faq(message):
 #Админ панель
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
-    if str(message.from_user.id) not in ADMIN_IDS:
+    user_id = message.from_user.id
+    if is_duplicate(user_id, message.text):
+        bot.send_message(
+            message.chat.id,
+            "⚠️ Пожалуйста, не отправляйте одну и ту же команду подряд."
+        )
+        return
+    if str(user_id) not in ADMIN_IDS:
         bot.send_message(message.chat.id, "⛔ У вас нет доступа.")
         return
 
@@ -409,6 +436,15 @@ def validate_length(text: str, chat_id: int) -> bool:
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     user_input = message.text
+    uid = message.from_user.id
+
+    # Проверка на дубликат (команды обработаны выше)
+    if is_duplicate(uid, user_input):
+        bot.send_message(
+            message.chat.id,
+            "⚠️ Пожалуйста, не отправляйте два одинаковых сообщения подряд."
+        )
+        return
 
     if not validate_length(user_input, message.chat.id):
         return
@@ -421,13 +457,13 @@ def handle_message(message):
         )
         return
 
-    response, score, isFound = get_answer(user_input)
+    response, score, isFound, parseMode = get_answer(user_input)
     if response is None:
         response = "Ошибка: message text is empty"
     if isFound:
-        bot.send_message(message.chat.id, response)
+        bot.send_message(message.chat.id, response, parse_mode=parseMode)
     else:
-        bot.send_message(message.chat.id, response + OPERATOR)
+        bot.send_message(message.chat.id, response + OPERATOR, parse_mode=parseMode)
         user = message.from_user
 
         with open('log.txt', 'a', encoding='utf-8') as f:
